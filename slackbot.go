@@ -74,6 +74,7 @@ func (s *SlackBot) HandleRequest(ctx context.Context, w http.ResponseWriter, r *
 		}
 		w.Header().Set("Content-Type", "text")
 		w.Write([]byte(r.Challenge))
+		return nil
 	}
 
 	// Eventのハンドリング
