@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/SotaEndo0214/pbbotfunc/pkg/pokemonsleep"
+	"github.com/SotaEndo0214/pbbotfunc/pkg/slackbot"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"go.uber.org/zap"
@@ -26,13 +28,13 @@ func PokemonSleepFoods(w http.ResponseWriter, r *http.Request) {
 	}
 	defer logger.Sync()
 
-	slackbot := NewSlackBot(logger, token, secrets, func(s *SlackBot, ctx context.Context, event slackevents.EventsAPIEvent) error {
+	bot := slackbot.NewSlackBot(logger, token, secrets, func(s *slackbot.SlackBot, ctx context.Context, event slackevents.EventsAPIEvent) error {
 		s.Logger.Info("callback")
 		innerEvent := event.InnerEvent
 		switch ev := innerEvent.Data.(type) {
 		case *slackevents.AppMentionEvent:
-			var message SlackMessage
-			err := ConverToMessage(event, &message)
+			var message slackbot.SlackMessage
+			err := slackbot.ConverToMessage(event, &message)
 			if err != nil {
 				return fmt.Errorf("handle callback failed: %w", err)
 			}
@@ -45,7 +47,7 @@ func PokemonSleepFoods(w http.ResponseWriter, r *http.Request) {
 				return nil
 			}
 
-			psclient, err := NewClientFromLocal(ctx, s.Token, foodConfPath, cookConfPath, s.Logger)
+			psclient, err := pokemonsleep.NewClientFromLocal(ctx, s.Token, foodConfPath, cookConfPath, s.Logger)
 			if err != nil {
 				return fmt.Errorf("init PokemonSleep Client failed: %w", err)
 			}
@@ -66,7 +68,7 @@ func PokemonSleepFoods(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 
-	err = slackbot.HandleRequest(ctx, w, r)
+	err = bot.HandleRequest(ctx, w, r)
 	if err != nil {
 		logger.Error("failed handle request.", zap.Error(err))
 		return

@@ -1,9 +1,8 @@
-package psbotfunc
+package pokemonsleep
 
 import (
 	"image"
 	"image/color"
-	"io"
 	"math"
 	"regexp"
 	"strconv"
@@ -13,88 +12,71 @@ import (
 	"go.uber.org/zap"
 )
 
-type Image struct {
-	Logger *zap.Logger `json:"-"`
-	Format string
-	Bytes  io.Reader
-
-	Width  int
-	Height int
+type DetectResult struct {
+	Image *Image
 
 	DetectedTexts []*DetectedText
 	DetectedFoods map[string]int
 }
 
-func NewImage(imageBytes io.Reader, filetype string, width, height int, logger *zap.Logger) (*Image, error) {
-	return &Image{
-		Logger: logger,
-		Bytes:  imageBytes,
-		Format: filetype,
-		Width:  width,
-		Height: height,
-	}, nil
-}
-
-func (i *Image) UpdateImage(annotations []*visionpb.EntityAnnotation) error {
-	i.DetectedFoods = make(map[string]int)
-
+func NewDetectedResult(img *Image, annotations []*visionpb.EntityAnnotation) *DetectResult {
 	dtexts := []*DetectedText{}
 	for id, annotation := range annotations {
-		dtext := NewDetectedText(strconv.Itoa(id), annotation, i.Width, i.Height, i.Logger)
+		dtext := NewDetectedText(strconv.Itoa(id), annotation, img.Width, img.Height, img.Logger)
 		dtexts = append(dtexts, dtext)
 	}
-	i.DetectedTexts = dtexts
-
-	i.MarshalDetectedTexts()
-	return nil
+	return &DetectResult{
+		Image:         img,
+		DetectedTexts: dtexts,
+		DetectedFoods: make(map[string]int),
+	}
 }
 
-func (i *Image) MarshalDetectedTexts() error {
+func (d *DetectResult) TidyDetcetdTexts() {
 	points := []DetectedText{}
-	for _, dtext := range i.DetectedTexts {
+	for _, dtext := range d.DetectedTexts {
 		points = append(points, *dtext)
 	}
-	clusters := Clusterize(points[1:], 1, 0.01, i.Logger)
+	clusters := Clusterize(points[1:], 1, 0.01)
 	merged := []*DetectedText{}
 	for _, cluster := range clusters {
 		m := Merge(cluster...)
 		merged = append(merged, m)
 	}
-	i.DetectedTexts = merged
-	return nil
+	d.DetectedTexts = merged
 }
 
-func (i *Image) DetetcFoods(foods []*Food) {
-	for _, dtext := range i.DetectedTexts {
+func (d *DetectResult) DetectFoods(foods []*Food) {
+	d.TidyDetcetdTexts()
+	for _, dtext := range d.DetectedTexts {
 		if isFood, food := dtext.IsFood(foods); isFood {
-			i.DetectedFoods[food.Name] = GetFoodNum(dtext, i.DetectedTexts)
-			i.Logger.Debug(food.Name, zap.Int("num", i.DetectedFoods[food.Name]))
+			d.DetectedFoods[food.Name] = GetFoodNum(dtext, d.DetectedTexts)
 		}
 	}
 }
 
-func (i *Image) GetCookResult(cooks []*Cook) (string, string) {
+func (d *DetectResult) GetCookResultString(cooks []*Cook) (string, string) {
 	var makables string
 	var unmakables string
 	for _, cook := range cooks {
-		if i.isMakable(cook) {
-			makables += "    " + cook.Name + "\n"
+		if d.isMakable(cook) {
+			makables += "    :o: " + cook.Name + "\n"
 			for _, food := range cook.Recipe {
-				makables += "        " + food.Name + " x" + strconv.Itoa(food.Num) + "\n"
+				makables += "          ・" + food.Name + " x" + strconv.Itoa(food.Num) + "\n"
 			}
 		} else {
-			unmakables += "    " + cook.Name + "\n"
+			unmakables += "    :x: " + cook.Name + "\n"
 			for _, food := range cook.Recipe {
 				var shortage int
-				if v, ok := i.DetectedFoods[food.Name]; ok {
+				if v, ok := d.DetectedFoods[food.Name]; ok {
 					shortage = food.Num - v
 				} else {
 					shortage = food.Num
 				}
 				if shortage <= 0 {
-					unmakables += "        " + food.Name + " x" + strconv.Itoa(food.Num) + "\n"
+					unmakables += "          :white_check_mark: " + food.Name + " x" + strconv.Itoa(food.Num) + "\n"
 				} else {
-					unmakables += "        " + food.Name + " x" + strconv.Itoa(food.Num) + " あと" + strconv.Itoa(shortage) + "\n"
+					unmakables += "          :heavy_multiplication_x: " + food.Name + " x" + strconv.Itoa(food.Num) + " あと" + strconv.Itoa(shortage) + "\n"
 				}
 			}
 		}
@@ -102,9 +84,9 @@ func (i *Image) GetCookResult(cooks []*Cook) (string, string) {
 	return "作れるレシピ:\n" + makables, "作れないレシピ:\n" + unmakables
 }
 
-func (i *Image) isMakable(cook *Cook) bool {
+func (d *DetectResult) isMakable(cook *Cook) bool {
 	for _, food := range cook.Recipe {
-		num, ok := i.DetectedFoods[food.Name]
+		num, ok := d.DetectedFoods[food.Name]
 		if !ok {
 			return false
 		} else if num < food.Num {
@@ -114,20 +96,11 @@ func (i *Image) isMakable(cook *Cook) bool {
 	return true
 }
 
-type TextType int
-
-const (
-	FOODS = iota
-	NUM
-	OTHER
-)
-
 type DetectedText struct {
 	Logger *zap.Logger `json:"-"`
 
 	ID   string   `json:"id"`
 	Text []string `json:"text"`
-	Type TextType
 
 	MinX int `json:"-"`
 	MinY int `json:"-"`

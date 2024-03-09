@@ -1,6 +1,4 @@
-package psbotfunc
-
-import "go.uber.org/zap"
+package pokemonsleep
 
 const (
 	NOISE     = false
@@ -9,7 +7,7 @@ const (
 
 type Cluster []DetectedText
 
-func Clusterize(objects []DetectedText, minPts int, eps float64, logger *zap.Logger) []Cluster {
+func Clusterize(objects []DetectedText, minPts int, eps float64) []Cluster {
 	clusters := make([]Cluster, 0)
 	visited := make(map[string]bool)
 	for _, point := range objects {

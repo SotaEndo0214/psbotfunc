@@ -1,4 +1,4 @@
-package psbotfunc
+package slackbot
 
 import (
 	"context"

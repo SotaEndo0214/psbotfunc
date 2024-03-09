@@ -1,4 +1,4 @@
-package psbotfunc
+package pokemonsleep
 
 import (
 	"context"
@@ -96,34 +96,35 @@ func (c *Client) GetResultText(ctx context.Context, text, filetype, imageUrl str
 		return nil, fmt.Errorf("failed to create Image:%w", err)
 	}
 
-	var ret []string
-	err = c.OCR(ctx, img)
+	dres, err := c.OCR(ctx, img)
 	if err != nil {
 		return nil, fmt.Errorf("failed OCR:%w", err)
 	}
-	img.DetetcFoods(c.Foods)
 
+	dres.DetectFoods(c.Foods)
+
+	var ret []string
 	var foodsStr string
-	for k, v := range img.DetectedFoods {
+	for k, v := range dres.DetectedFoods {
 		foodsStr += k + " x" + strconv.Itoa(v) + "\n"
 	}
 	ret = append(ret, foodsStr)
 
 	var makablesStr, unmakablesStr string
 	if strings.Contains(text, "サラダ") {
-		makablesStr, unmakablesStr = img.GetCookResult(c.Salad)
+		makablesStr, unmakablesStr = dres.GetCookResultString(c.Salad)
 	} else if strings.Contains(text, "カレー") {
-		makablesStr, unmakablesStr = img.GetCookResult(c.Curry)
+		makablesStr, unmakablesStr = dres.GetCookResultString(c.Curry)
 	} else if strings.Contains(text, "デザート") {
-		makablesStr, unmakablesStr = img.GetCookResult(c.Desert)
+		makablesStr, unmakablesStr = dres.GetCookResultString(c.Desert)
 	} else {
-		makables, unmakables := img.GetCookResult(c.Salad)
+		makables, unmakables := dres.GetCookResultString(c.Salad)
 		makablesStr += "\nサラダの" + makables
 		unmakablesStr += "\nサラダの" + unmakables
-		makables, unmakables = img.GetCookResult(c.Curry)
+		makables, unmakables = dres.GetCookResultString(c.Curry)
 		makablesStr += "\nカレーの" + makables
 		unmakablesStr += "\nカレーの" + unmakables
-		makables, unmakables = img.GetCookResult(c.Desert)
+		makables, unmakables = dres.GetCookResultString(c.Desert)
 		makablesStr += "\nデザートの" + makables
 		unmakablesStr += "\nデザートの" + unmakables
 	}
@@ -132,25 +133,26 @@ func (c *Client) GetResultText(ctx context.Context, text, filetype, imageUrl str
 	return ret, nil
 }
 
-func (c *Client) OCR(ctx context.Context, img *Image) error {
+func (c *Client) OCR(ctx context.Context, img *Image) (*DetectResult, error) {
 	// Vision AIに読み込ませる準備
 	visionImg, err := vision.NewImageFromReader(img.Bytes)
 	if err != nil {
-		return fmt.Errorf("load file failed: %w", err)
+		return nil, fmt.Errorf("load file failed: %w", err)
 	}
 
 	// 実行
 	annotations, err := c.Vision.DetectTexts(ctx, visionImg, nil, 0)
 	if err != nil {
-		return fmt.Errorf("execute ocr failed: %w", err)
+		return nil, fmt.Errorf("execute ocr failed: %w", err)
 	}
 
-	err = img.UpdateImage(annotations)
-	if err != nil {
-		return fmt.Errorf("NewImage failed: %w", err)
-	}
+	// err = img.UpdateImage(annotations)
+	// if err != nil {
+	// 	return fmt.Errorf("NewImage failed: %w", err)
+	// }
+	dresult := NewDetectedResult(img, annotations)
 
-	return nil
+	return dresult, nil
 }
 
 func DownloadImage(url, token string) (*http.Response, error) {

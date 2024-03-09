@@ -1,4 +1,4 @@
-package psbotfunc
+package pokemonsleep
 
 type Food struct {
 	Name   string `json:"name"`
