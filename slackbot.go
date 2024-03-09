@@ -41,21 +41,7 @@ func (s *SlackBot) HandleRequest(ctx context.Context, w http.ResponseWriter, r *
 		return fmt.Errorf("read request failed: %w", err)
 	}
 	defer r.Body.Close()
-
-	// リクエストの検証
-	sv, err := slack.NewSecretsVerifier(r.Header, s.Secret)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return fmt.Errorf("validate request failed: %w", err)
-	}
-	if _, err := sv.Write(body); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return fmt.Errorf("validate request failed: %w", err)
-	}
-	if err := sv.Ensure(); err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return fmt.Errorf("validate request failed: %w", err)
-	}
+	s.Logger.Info("request received")
 
 	// eventをパース
 	event, err := slackevents.ParseEvent(json.RawMessage(body), slackevents.OptionNoVerifyToken())
@@ -75,6 +61,21 @@ func (s *SlackBot) HandleRequest(ctx context.Context, w http.ResponseWriter, r *
 		w.Header().Set("Content-Type", "text")
 		w.Write([]byte(r.Challenge))
 		return nil
+	}
+
+	// リクエストの検証
+	sv, err := slack.NewSecretsVerifier(r.Header, s.Secret)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return fmt.Errorf("create SecretsVerifier failed: %w", err)
+	}
+	if _, err := sv.Write(body); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return fmt.Errorf("write request to SecretsVerifier failed: %w", err)
+	}
+	if err := sv.Ensure(); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return fmt.Errorf("ensure request failed: %w", err)
 	}
 
 	// Eventのハンドリング

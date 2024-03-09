@@ -9,10 +9,7 @@ const (
 
 type Cluster []DetectedText
 
-var l *zap.Logger
-
 func Clusterize(objects []DetectedText, minPts int, eps float64, logger *zap.Logger) []Cluster {
-	l = logger
 	clusters := make([]Cluster, 0)
 	visited := make(map[string]bool)
 	for _, point := range objects {
@@ -25,10 +22,7 @@ func Clusterize(objects []DetectedText, minPts int, eps float64, logger *zap.Log
 				visited[point.GetID()] = NOISE
 			}
 		}
-		// l.Debug(point.ID, zap.Any("clusters", clusters))
 	}
-	// l.Debug("finish", zap.Any("clusters", clusters))
-	l.Info("clustering finish.")
 	return clusters
 }
 
@@ -37,13 +31,11 @@ func Clusterize(objects []DetectedText, minPts int, eps float64, logger *zap.Log
 // the distance limit from the point
 func findNeighbours(point DetectedText, points []DetectedText, eps float64) []DetectedText {
 	neighbours := make([]DetectedText, 0)
-	// neighbours = append(neighbours, point)
 	for _, potNeigb := range points {
 		if point.GetID() != potNeigb.GetID() && potNeigb.Distance(point) <= eps {
 			neighbours = append(neighbours, potNeigb)
 		}
 	}
-	// l.Debug("neigher", zap.String(point.ID, point.Text), zap.Any("neighers", neighbours))
 	return neighbours
 }
 
@@ -72,11 +64,9 @@ func expandCluster(point DetectedText, cluster Cluster, neighbours, points []Det
 		}
 
 		length = len(seed)
-		// l.Debug(point.GetID()+":"+point.Text, zap.Int("ind", index), zap.Any("seed", seed))
 		index++
 	}
 	cluster = merge(cluster, seed, visited)
-	// l.Debug("expand", zap.Any("cluster", cluster))
 	for _, p := range cluster {
 		visited[p.GetID()] = CLUSTERED
 	}
@@ -89,7 +79,6 @@ func merge(one []DetectedText, two []DetectedText, visited map[string]bool) []De
 	putAll(mergeMap, two)
 	merged := make([]DetectedText, 0)
 	for _, val := range mergeMap {
-		// visited[val.GetID()] = CLUSTERED
 		merged = append(merged, val)
 	}
 

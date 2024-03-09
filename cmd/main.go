@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	funcframework.RegisterHTTPFunctionContext(context.Background(), "/slack/events", psbotfunc.PokemonSleepFoods)
+	funcframework.RegisterHTTPFunctionContext(context.Background(), "/", psbotfunc.PokemonSleepFoods)
 	port := "8080"
 	if err := funcframework.Start(port); err != nil {
 		log.Fatalf("funcframework.Start: %v\n", err)

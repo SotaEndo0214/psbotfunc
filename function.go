@@ -7,22 +7,17 @@ import (
 	"net/http"
 	"os"
 
-	// framework "github.com/GoogleCloudPlatform/functions-framework-go"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"go.uber.org/zap"
 )
 
-// func init() {
-// 	framework.functions.HTTP("Pokemonsleep bot", PokemonSleepFoods)
-// }
-
 func PokemonSleepFoods(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	token := os.Getenv("SLACK_AUTH_TOKEN")
 	secrets := os.Getenv("SLACK_SIGNING_SECRETS")
-	foodConf := os.Getenv("POKEMONSLEEP_FOODS_JSON_PATH")
-	cookConf := os.Getenv("POKEMONSLEEP_COOKS_JSON_PATH")
+	foodConfPath := os.Getenv("POKEMONSLEEP_FOODS_JSON_PATH")
+	cookConfPath := os.Getenv("POKEMONSLEEP_COOKS_JSON_PATH")
 
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -50,7 +45,7 @@ func PokemonSleepFoods(w http.ResponseWriter, r *http.Request) {
 				return nil
 			}
 
-			psclient, err := NewClient(ctx, s.Token, foodConf, cookConf, s.Logger)
+			psclient, err := NewClientFromLocal(ctx, s.Token, foodConfPath, cookConfPath, s.Logger)
 			if err != nil {
 				return fmt.Errorf("init PokemonSleep Client failed: %w", err)
 			}

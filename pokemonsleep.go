@@ -26,7 +26,34 @@ type Client struct {
 	Curry  []*Cook `json:"curry"`
 }
 
-func NewClient(ctx context.Context, token string, foodsConfigPath, cooksConfigPath string, logger *zap.Logger) (*Client, error) {
+func NewClientFromRemote(ctx context.Context, token string, foodsConfigUrl, cooksConfigUrl string, logger *zap.Logger) (*Client, error) {
+	ret := &Client{
+		SlackToken: token,
+		Logger:     logger,
+	}
+
+	// vision clientの初期化
+	vc, err := vision.NewImageAnnotatorClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("init vision client failed: %w", err)
+	}
+	ret.Vision = vc
+
+	// json config読み込み
+	err = LoadJsonConfig(foodsConfigUrl, ret)
+	if err != nil {
+		return nil, fmt.Errorf("load json config (%s) failed: %w", foodsConfigUrl, err)
+	}
+	err = LoadJsonConfig(cooksConfigUrl, ret)
+	if err != nil {
+		return nil, fmt.Errorf("load json config (%s) failed: %w", cooksConfigUrl, err)
+	}
+
+	ret.Logger.Info("init Client.")
+	return ret, nil
+}
+
+func NewClientFromLocal(ctx context.Context, token string, foodsConfigPath, cooksConfigPath string, logger *zap.Logger) (*Client, error) {
 	ret := &Client{
 		SlackToken: token,
 		Logger:     logger,
