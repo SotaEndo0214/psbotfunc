@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
+	// framework "github.com/GoogleCloudPlatform/functions-framework-go"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"go.uber.org/zap"
 )
 
-func init() {
-	functions.HTTP("Pokemonsleep bot", PokemonSleepFoods)
-}
+// func init() {
+// 	framework.functions.HTTP("Pokemonsleep bot", PokemonSleepFoods)
+// }
 
 func PokemonSleepFoods(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
@@ -71,5 +71,9 @@ func PokemonSleepFoods(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 
-	slackbot.HandleRequest(ctx, w, r)
+	err = slackbot.HandleRequest(ctx, w, r)
+	if err != nil {
+		logger.Error("failed handle request.", zap.Error(err))
+		return
+	}
 }

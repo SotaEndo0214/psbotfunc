@@ -58,7 +58,13 @@ func (c *Client) Close() {
 }
 
 func (c *Client) GetResultText(ctx context.Context, text, filetype, imageUrl string, originalW, originalH int) ([]string, error) {
-	img, err := NewImage(imageUrl, c.SlackToken, filetype, originalW, originalH, c.Logger)
+	resp, err := DownloadImage(imageUrl, c.SlackToken)
+	if err != nil {
+		return nil, fmt.Errorf("download image failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	img, err := NewImage(resp.Body, filetype, originalW, originalH, c.Logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Image:%w", err)
 	}
@@ -111,7 +117,6 @@ func (c *Client) OCR(ctx context.Context, img *Image) error {
 	if err != nil {
 		return fmt.Errorf("execute ocr failed: %w", err)
 	}
-	c.Logger.Info("ocr result", zap.Any("annotations", annotations))
 
 	err = img.UpdateImage(annotations)
 	if err != nil {

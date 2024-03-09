@@ -1,6 +1,6 @@
 module github.com/SotaEndo0214/pbbotfunc
 
-go 1.22.0
+go 1.21
 
 require (
 	cloud.google.com/go/vision v1.2.0
@@ -14,6 +14,7 @@ require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/functions v1.15.4 // indirect
 	cloud.google.com/go/longrunning v0.5.5 // indirect
 	github.com/cloudevents/sdk-go/v2 v2.15.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

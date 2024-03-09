@@ -1,0 +1,84 @@
+{
+    "foods": [
+        {
+            "name": "おいしいシッポ",
+            "label": "foods_oisiishippo",
+            "energy": 342
+        },
+        {
+            "name": "ふといながねぎ",
+            "label": "foods_futoinaganegi",
+            "energy": 185
+        },
+        {
+            "name": "あじわいキノコ",
+            "label":"foods_ajiwaikinoko",
+            "energy": 167
+        },
+        {
+            "name": "リラックスカカオ",
+            "label": "foods_relaxkakao",
+            "energy": 151
+        },
+        {
+            "name": "ワカクサコーン",
+            "label": "foods_wakakusacorn",
+            "energy": 140
+        },
+        {
+            "name": "げきからハーブ",
+            "label": "foods_gekikaraherb",
+            "energy": 130
+        },
+        {
+            "name": "ほっこりポテト",
+            "label": "foods_hokkoripotato",
+            "energy": 124
+        },
+        {
+            "name": "ピュアなオイル",
+            "label": "foods_purenaoil",
+            "energy": 121
+        },
+        {
+            "name": "とくせんエッグ",
+            "label": "foods_tokusenegg",
+            "energy": 115
+        },
+        {
+            "name": "あんみんトマト",
+            "label": "foods_anmintomato",
+            "energy": 110
+        },
+        {
+            "name": "あったかジンジャー",
+            "label": "foods_attakaginger",
+            "energy": 109
+        },
+        {
+            "name": "マメミート",
+            "label": "foods_mamemeet",
+            "energy": 103
+        },
+        {
+            "name": "あまいミツ",
+            "label": "foods_amaimitsu",
+            "energy": 101
+        },
+        {
+            "name": "ワカクサ大豆",
+            "label": "foods_wakakusadaizu",
+            "energy": 100
+        },
+        {
+            "name": "モーモーミルク",
+            "label": "foods_momomilk",
+            "energy": 98
+        },
+        {
+            "name": "とくせんリンゴ",
+            "label": "foods_tokusenringo",
+            "energy": 90
+        }
+    ]
+}

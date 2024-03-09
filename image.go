@@ -1,7 +1,6 @@
 package psbotfunc
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"io"
@@ -26,16 +25,10 @@ type Image struct {
 	DetectedFoods map[string]int
 }
 
-func NewImage(url, token string, filetype string, width, height int, logger *zap.Logger) (*Image, error) {
-	resp, err := DownloadImage(url, token)
-	if err != nil {
-		return nil, fmt.Errorf("download image failed: %w", err)
-	}
-	defer resp.Body.Close()
-
+func NewImage(imageBytes io.Reader, filetype string, width, height int, logger *zap.Logger) (*Image, error) {
 	return &Image{
 		Logger: logger,
-		Bytes:  resp.Body,
+		Bytes:  imageBytes,
 		Format: filetype,
 		Width:  width,
 		Height: height,
