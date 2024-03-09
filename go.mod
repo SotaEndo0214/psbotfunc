@@ -1,4 +1,4 @@
-module psbotfunc
+module github.com/SotaEndo0214/pbbotfunc
 
 go 1.22.0
 
